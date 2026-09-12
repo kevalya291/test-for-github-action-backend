@@ -4,6 +4,7 @@ metadata:
   name: backend-data
   namespace: quickkart
 spec:
+  storageClassName: gp2
   accessModes:
     - ReadWriteOnce
   resources:
