@@ -58,8 +58,19 @@ jobs:
 
       - name: Configure kubeconfig
         run: |
+          if [ -z "${{ secrets.KUBE_CONFIG }}" ]; then
+            echo "::error::KUBE_CONFIG secret is empty or not set on this repo. Add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
           mkdir -p "$HOME/.kube"
           echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > "$HOME/.kube/config"
+          if [ ! -s "$HOME/.kube/config" ]; then
+            echo "::error::Decoded kubeconfig is empty. KUBE_CONFIG secret must be the base64 encoding of your kubeconfig file."
+            exit 1
+          fi
+
+      - name: Verify cluster connectivity
+        run: kubectl cluster-info
 
       - name: Ensure namespace exists
         run: kubectl create namespace quickkart --dry-run=client -o yaml | kubectl apply -f -
