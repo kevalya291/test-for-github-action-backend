@@ -56,6 +56,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check required secrets are set
+        run: |
+          missing=""
+          [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ] && missing="$missing AWS_ACCESS_KEY_ID"
+          [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ] && missing="$missing AWS_SECRET_ACCESS_KEY"
+          [ -z "${{ secrets.JWT_SECRET }}" ] && missing="$missing JWT_SECRET"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repo secret(s):$missing — add them under Settings > Secrets and variables > Actions on this repo."
+            exit 1
+          fi
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
