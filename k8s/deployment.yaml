@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: quickkart
+  labels:
+    app: backend
+spec:
+  # File-based store.js persistence is not safe for concurrent writers,
+  # and the PVC below is ReadWriteOnce, so this stays a single replica.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/kevalya291/test-for-github-action-backend:latest
+          ports:
+            - containerPort: 5000
+          env:
+            - name: PORT
+              value: "5000"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: JWT_SECRET
+          volumeMounts:
+            # subPath mounts only store.json from the volume, so the
+            # seed data/products.js baked into the image isn't shadowed.
+            - name: backend-data
+              mountPath: /app/data/store.json
+              subPath: store.json
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 20
+      volumes:
+        - name: backend-data
+          persistentVolumeClaim:
+            claimName: backend-data
