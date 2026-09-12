@@ -12,7 +12,7 @@ export const categories = [
 export const products = [
   {
     id: "p1",
-    name: "Fresh Banana (Robusta)",
+    name: "Fresh Banana (Robusta).",
     brand: "Farm Fresh",
     category: "fruits-veg",
     price: 49,
